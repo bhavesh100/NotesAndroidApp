@@ -1,16 +1,13 @@
 package com.example.notesandroidapp
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.FragmentTransaction
@@ -27,7 +24,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 
 class GoogleSignIn : Fragment() {
     lateinit var googleSignIn: SignInButton
-    lateinit var button: Button
     private lateinit var auth: FirebaseAuth
     private lateinit var viewOfLayout: View
     private lateinit var googleSignInClient: GoogleSignInClient
@@ -57,13 +53,9 @@ class GoogleSignIn : Fragment() {
         sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
         // Initialize sharedPreferences
         viewOfLayout = inflater.inflate(R.layout.fragment_google_sign_in, container, false)
-        button = viewOfLayout.findViewById(R.id.button)
         googleSignIn = viewOfLayout.findViewById(R.id.btnSignIn)
         googleSignIn.setOnClickListener {
             signIn()
-        }
-        button.setOnClickListener {
-            Toast.makeText(context,"Login to notes Screen",Toast.LENGTH_SHORT).show()
         }
         return viewOfLayout
     }
