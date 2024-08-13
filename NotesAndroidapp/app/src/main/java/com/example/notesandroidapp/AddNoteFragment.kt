@@ -32,7 +32,26 @@ class AddNoteFragment : Fragment() {
             val title = editTextNoteTitle.text.toString().trim()
             val content = editTextNoteContent.text.toString().trim()
 
-            if (title.isNotEmpty() && content.isNotEmpty()) {
+            var isValid = true
+
+            if (title.isEmpty()) {
+                // Display an error message on the title field
+                editTextNoteTitle.error = "Title cannot be empty"
+                isValid = false
+            } else {
+                editTextNoteTitle.error = null
+            }
+
+            if (content.isEmpty()) {
+                // Display an error message on the content field
+                editTextNoteContent.error = "Content cannot be empty"
+                isValid = false
+            } else {
+                editTextNoteContent.error = null
+            }
+
+            if (isValid) {
+                // Save the note if both title and content are valid
                 val userId = sharedPreferencesHelper.getUserId() // Replace with actual logic to get the logged-in user's ID
                 dbHelper.addNote(title, content, userId)
                 parentFragmentManager.beginTransaction()
