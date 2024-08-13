@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ClickableSpan
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,8 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 
@@ -22,6 +25,7 @@ class NotesFragment : Fragment(), NoteAdapter.OnItemClickListener, NoteAdapter.O
     lateinit var noteAdapter: NoteAdapter
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     lateinit var logoutTextView: TextView
+    private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
@@ -39,12 +43,19 @@ class NotesFragment : Fragment(), NoteAdapter.OnItemClickListener, NoteAdapter.O
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         logoutTextView = view.findViewById(R.id.logoutTextView)
         auth = FirebaseAuth.getInstance()
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(requireActivity(), gso)
+
         val text = "Logout"
         val spannableString = SpannableString(text)
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
                 // Handle click event
-                auth.signOut()
+                signOut()
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container_view,GoogleSignIn())
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
@@ -72,7 +83,7 @@ class NotesFragment : Fragment(), NoteAdapter.OnItemClickListener, NoteAdapter.O
         loadNotes()
     }
     private fun loadNotes() {
-        val userId = sharedPreferencesHelper.getUserId() // Replace with actual logic to get the logged-in user's ID
+        val userId = sharedPreferencesHelper.getUserId()
         val notesCursor = dbHelper.getNotes(userId)
         val notesList = mutableListOf<Note>()
 
@@ -104,5 +115,22 @@ class NotesFragment : Fragment(), NoteAdapter.OnItemClickListener, NoteAdapter.O
             .replace(R.id.fragment_container_view, updateNoteFragment)
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             .commit()
+    }
+    fun signOut() {
+        // Sign out from Firebase Authentication
+        auth.signOut()
+
+        // Revoke access from Google Sign-In
+        googleSignInClient.revokeAccess().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // Successfully signed out and revoked access
+                googleSignInClient.signOut().addOnCompleteListener {
+                    Log.w("NotesFragment", "LogOut Successfully", task.exception)
+                }
+            } else {
+                Log.w("NotesFragment", "revokeAccess:failure", task.exception)
+                Toast.makeText(context, "Failed to sign out completely.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
